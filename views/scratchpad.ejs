@@ -1,0 +1,56 @@
+<section class="shop">
+    <h2 class="shop-title">Best Recommendations</h2>
+    <div id="recommendations" class="carousel slide card-slider" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <% for(var i = 0; i < likeList.length; i+= 4){ %>
+                <%if(i === 0){%>
+            <div class="carousel-item active">
+                <div class="shop-row">
+                    <%for(var j = 0; j < 4; j++){%>
+                    <div class="card-product">
+                        <a href="/product/<%=likeList[j].barcode%>">
+                            <img class="card-product-img" src="images/<%=likeList[j].barcode%>.png">
+                            <div>
+                                <span class="card-product-name"><%=likeList[j].d_name%></span>
+                            </div>
+                            <div class="card-product-price-content">
+                                <span class="card-product-content">Best Price* </span>
+                                <span class="card-product-price">Rs.<%=likeList[j].price%></span>
+                            </div>
+                        </a>
+                        <button class="button card-product-btn">BUY</button>
+                    </div>
+                    <%}%>
+                </div>
+            </div>
+            <%}else{%>
+            <div class="carousel-item">
+                <div class="shop-row">
+                    <%for(var j = i; j < i+4; j++){%>
+                        <div class="card-product">
+                            <a href="/product/<%=likeList[j].barcode%>">
+                                <img class="card-product-img" src="images/<%=likeList[j].barcode%>.png">
+                                <div>
+                                    <span class="card-product-name"><%=likeList[j].d_name%></span>
+                                </div>
+                                <div class="card-product-price-content">
+                                    <span class="card-product-content">Best Price* </span>
+                                    <span class="card-product-price">Rs.<%=likeList[j].price%></span>
+                                </div>
+                            </a>
+                            <button class="button card-product-btn">BUY</button>
+                        </div>
+                    <%}%>
+                </div>
+            </div>
+            <%}%>
+            
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#recommendations" data-bs-slide="prev">
+                <div class="row-btn previous-button"></div>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#recommendations" data-bs-slide="next">
+                <div class="row-btn next-button"></div>
+            </button>
+    </div>
+</section>

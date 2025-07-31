@@ -1,0 +1,59 @@
+<%-include('header');-%>
+
+  <section>
+    <div class="content">
+      <div class="container-header">
+        <img class="avatar" src="/images/order-success.png" alt="order-success">
+        <h1>Your order was sucessful!</h1>
+
+        <div class="container">
+          <details class="open">
+            <div class="container-header">
+              <h1 class="header-style">Item</h1>
+                <div class="result-block">
+                  <a href="/product/<%= order.barcode %>">
+                    <img class="card-product-img" src="/images/<%= order.barcode %>.png">
+                  </a>
+                    <div>
+                    <span>Order id: <%= orderHist.order_id %></span>
+                    <span>Barcode: <%= orderHist.barcode %></span>
+                    <span>Price: ₹<%= orderHist.price %></span>
+                    <span>Quantity: <%= orderHist.quantity %></span>
+                    <span>Date Of Purchase: <%= orderHist.dt_purch %></span>
+                  </div>
+                  <div>
+                    <span>Address: <%= orderHist.address %></span>
+                    <span>Delivered: <%= orderHist.delivered %></span>
+                  </div>
+                </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="container" style="background-color:#f1f1f1">
+          <label for="return"><b>Browse more</b></label>
+          <form action="/">
+            <button class="button return" type="submit" name="return">Return to the Homepage</button>
+          </form>
+        </div>
+
+        <div class="container-header">
+          <h1 class="header-style">More like this</h1>
+          <div class="history-item-row">
+            <% for(var i=0; i < likeList.length; i++){ %>
+              <a href="/product/<%= likeList[i].barcode %>">
+                <div class="history-item-column">
+                  <div class="card">
+                    <img class="img_card" src="/images/<%=likeList[i].barcode%>.png">
+                    <%= likeList[i].d_name %>
+                    price: ₹<%= likeList[i].price %>
+                  </div>
+                </div>
+                <%}%>
+              </a>
+          </div>
+        </div>
+      </div>
+    </div>  
+  </section>
+  <%-include('footer');-%>

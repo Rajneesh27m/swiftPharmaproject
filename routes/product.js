@@ -1,0 +1,130 @@
+const {Router, application} = require('express')
+const passport = require("passport")
+
+const router = Router()
+const db = require('../database')
+
+router.get("/:id", async (req, res) => {
+    try {
+        db.promise().query(`USE suppliers;`)
+    }
+    catch(err){
+        console.log(err)
+    }
+    queryString = `SELECT * FROM drugs WHERE barcode = '${req.params.id}'`
+    var result = await db.promise().query(queryString)
+    productObject = result[0]
+    queryString2 = `SELECT * FROM drugs WHERE d_category='${productObject[0].d_category}' AND barcode !='${productObject[0].barcode}';`
+    var likeObjects = await db.promise().query(queryString2)
+    var pincode = "000000"
+    var companyObject = {c_name:"polpo"}
+    queryStringComp = `SELECT * FROM company WHERE c_name = '${productObject[0].c_name}'`
+    var companyDetails = await db.promise().query(queryStringComp)
+    if(req.isAuthenticated()){
+        pincode = req.user.pincode
+    }
+    var wareAddress = await db.promise().query(`SELECT address FROM warehouse WHERE warehouse_id=${productObject[0].warehouse_no};`)
+    var warehouseAddress = wareAddress[0]
+    companyObject = companyDetails[0]
+    console.log(warehouseAddress)
+    warehouseAddress.push({address:"fill in the db"});
+    console.log(companyObject)
+    var name=""
+    if(req.isAuthenticated()){
+        name = req.user.username
+    }
+    res.render("product.ejs", {product:productObject[0], likeList : likeObjects[0], pincode:pincode, company:companyObject[0], waddress: warehouseAddress[0], name:name})
+})
+
+router.post("/:id/order", checkAuthenticated, (req, res) => {
+    console.log(req.body.payment)
+    if(req.body.payment.toLowerCase() === 'netbanking'){
+        res.redirect(`/product/${req.params.id}/order?q=${req.body.quantity}&m=netbanking`);
+    }else if(req.body.payment.toLowerCase() === 'cash on delivery'){
+        res.redirect(`/product/${req.params.id}/order?q=${req.body.quantity}&m=cashondelivery`);
+    }
+    
+})
+
+router.get("/:id/order", checkAuthenticated, async (req, res) => {
+    try {
+        db.promise().query(`USE suppliers;`)
+    }
+    catch(err){
+        console.log(err)
+    }
+    queryString = `SELECT * FROM drugs WHERE barcode = '${req.params.id}'` //Implement quantity function... or not.
+    var result = await db.promise().query(queryString)
+    var product = result[0]
+    let date = new Date()
+    let day = date.getDate();
+    let month = date.getMonth()+1;
+    let year = date.getFullYear();
+    let fullDate = `${day}.${month}.${year}.`;
+    let order_id = Date.now().toString()
+    let quantity = 1
+    if(req.query.q){
+        console.log(req.query.q)
+        quantity = req.query.q
+    }
+    try {
+        var queryString = `'${product[0].warehouse_no}', '${order_id}', '${req.user.user_id}','${product[0].barcode}','${product[0].price}','${quantity}','${fullDate}','${req.user.address}', 'Pending'`
+        db.promise().query(`INSERT INTO order_hist VALUES(${queryString});`)
+    }
+    catch(err){
+        console.log(err)
+    }
+    try {
+        paydt = "";
+        paymode="Cash on Delivery"
+        if(req.query.m){
+            if(req.query.m === 'netbanking'){
+                paymode = "Netbanking"
+                paydt = fullDate;
+            }
+        }
+        var queryStringPay = `'${order_id}','${paydt}','${paymode}'`
+        db.promise().query(`INSERT INTO payment VALUES(${queryStringPay});`)
+    }
+    catch(err){
+        console.log(err)
+    }
+    try {
+        var alterQuantQuery = `UPDATE drugs SET stock = stock - 1 WHERE stock > 0 AND barcode='${product[0].barcode}';`
+        db.promise().query(alterQuantQuery)
+    }
+    catch(err){
+        console.log(err)
+    }
+    var orderDetails = await db.promise().query(`SELECT * FROM order_hist WHERE order_id = ${order_id}`)
+    var orderHist = orderDetails[0];
+    queryString3 = `SELECT * FROM drugs WHERE barcode = '${req.params.id}'`
+    var result = await db.promise().query(queryString3)
+    productObject = result[0]
+    queryString2 = `SELECT * FROM drugs WHERE d_category='${productObject[0].d_category}' AND barcode !='${productObject[0].barcode}';`
+    var likeObjects = await db.promise().query(queryString2)
+    var name=""
+    if(req.isAuthenticated()){
+        name = req.user.username
+    }
+    console.log(name)
+    res.render("ordered.ejs",{likeList:likeObjects[0], order: productObject[0], orderHist: orderHist[0], name:name})
+})
+
+function checkAuthenticated(req, res, next){
+    if(req.isAuthenticated()){
+        next()
+    }
+    else{
+        req.session.returnTo = req.originalUrl;
+        res.redirect('/auths/login')
+    }
+}
+function checkNotAuthenticated(req, res, next) {
+    if(req.isAuthenticated()){
+        return res.redirect('/')
+    }
+    next()
+}
+
+module.exports = router
